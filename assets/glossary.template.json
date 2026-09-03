@@ -1,0 +1,32 @@
+{
+  "_comment": "Glossary for consistent naming across a chapter. Fill this in BEFORE translating, and reuse it for every chapter of the same series. Inconsistent character names is the single most common quality failure in comic translation.",
+  "series": "",
+  "target_language": "fa",
+  "characters": {
+    "_example_key_is_the_english_form": "معادل فارسی",
+    "Elias": "الیاس"
+  },
+  "titles_and_honorifics": {
+    "_comment": "Court/historical manhwa lives or dies on these. Pick one rendering per term and never vary it.",
+    "Your Majesty": "اعلی‌حضرت",
+    "Your Highness": "والا‌حضرت",
+    "My Lord": "سرورم",
+    "My Lady": "بانوی من",
+    "Duke": "دوک",
+    "Count": "کنت",
+    "Marquis": "مارکی"
+  },
+  "places": {},
+  "terms": {
+    "_comment": "Techniques, factions, magic systems, in-world jargon."
+  },
+  "do_not_translate": [
+    "_comment: names/logos/SFX to leave in the original script"
+  ],
+  "style_notes": [
+    "Register: spoken and natural, not literary. Manhwa dialogue is conversation.",
+    "Persian runs 15-25% longer than English — tighten rather than relying on autosizing.",
+    "Keep second-person forms consistent per character relationship (تو vs شما).",
+    "Sound effects baked into artwork are usually left as-is."
+  ]
+}

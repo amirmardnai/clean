@@ -1,0 +1,61 @@
+{
+  "_comment": "Example worksheet showing the exact shape ocr_pages.py produces and what a filled-in translation batch looks like. This is synthetic sample data, not from any real work.",
+  "source": "/path/to/source.pdf",
+  "page_count": 2,
+  "pages": [
+    {
+      "page": 1,
+      "file": "page-0001.png",
+      "width": 1667,
+      "height": 4167,
+      "items": [
+        {
+          "id": "p1-i1",
+          "box": [676, 1198, 689, 316],
+          "en": "GOOD MORNING. DID YOU SLEEP WELL?",
+          "fa": "صبح بخیر. خوب خوابیدی؟",
+          "kind": "dialogue",
+          "conf": 1.0,
+          "line_count": 2
+        },
+        {
+          "id": "p1-i2",
+          "box": [761, 2346, 670, 308],
+          "en": "I was still tired.",
+          "fa": "هنوز خسته بودم.",
+          "kind": "dialogue",
+          "conf": 1.0,
+          "line_count": 1
+        },
+        {
+          "id": "p1-i3",
+          "box": [272, 3083, 610, 170],
+          "en": "READ MORE AT EXAMPLE-SCANS.NET",
+          "fa": "",
+          "kind": "credit",
+          "conf": 0.5,
+          "line_count": 2,
+          "_note": "credit regions stay empty and are skipped at render time"
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "file": "page-0002.png",
+      "width": 1667,
+      "height": 4167,
+      "items": [
+        {
+          "id": "p2-i1",
+          "box": [459, 1058, 791, 97],
+          "en": "3S005",
+          "fa": "",
+          "kind": "dialogue",
+          "conf": 0.3,
+          "line_count": 1,
+          "_note": "OCR noise — leave fa empty so nothing is drawn"
+        }
+      ]
+    }
+  ]
+}
