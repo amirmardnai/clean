@@ -206,12 +206,9 @@ def detect_text_tiled(reader, np_img, tile_h=1800, overlap=250):
     return deduped
 
 
-def translate_dialogues_llm(texts, base_url=DEFAULT_LLM_URL, model=DEFAULT_LLM_MODEL, key=DEFAULT_LLM_KEY):
-    """
-    Send ordered list of English texts to Gemini for contextual Persian localization.
-    Uses structured ID mapping so responses are never misaligned or dropped.
-    Intelligently recovers stylized comic fonts, outlined typography, and handwriting distortions.
-    """
+def _llm_translate_batch(texts, base_url, model, key, max_tokens=12000):
+    """One request/response round with retries for a small batch of texts.
+    Returns a list of Persian strings aligned with `texts` ("" per failed item)."""
     if not texts:
         return []
 
@@ -239,13 +236,14 @@ def translate_dialogues_llm(texts, base_url=DEFAULT_LLM_URL, model=DEFAULT_LLM_M
             {"role": "user", "content": user_prompt},
         ],
         "temperature": 0.2,
-        "max_tokens": 4000,
+        "max_tokens": max_tokens,
     }
     headers = {
         "Authorization": f"Bearer {key}",
         "Content-Type": "application/json"
     }
 
+    last_parse_err = None
     for attempt in range(4):
         try:
             resp = requests.post(endpoint, json=payload, headers=headers, timeout=60)
@@ -256,7 +254,15 @@ def translate_dialogues_llm(texts, base_url=DEFAULT_LLM_URL, model=DEFAULT_LLM_M
                     content = re.sub(r"\n?```$", "", content).strip()
                 match = re.search(r"\[.*\]", content, re.DOTALL)
                 if match:
-                    parsed = json.loads(match.group(0))
+                    try:
+                        parsed = json.loads(match.group(0))
+                    except json.JSONDecodeError as e:
+                        # truncated/garbled JSON (long responses over max_tokens):
+                        # retry the whole batch instead of giving up silently
+                        last_parse_err = e
+                        print(f"      [LLM JSON Retry {attempt + 1}/4] parse error: {e}")
+                        time.sleep(2)
+                        continue
                     if isinstance(parsed, list):
                         fa_map = {}
                         for item in parsed:
@@ -266,8 +272,10 @@ def translate_dialogues_llm(texts, base_url=DEFAULT_LLM_URL, model=DEFAULT_LLM_M
                                 idx = len(fa_map)
                                 fa_map[idx] = item
 
-                        out_fa = [fa_map.get(i, "").strip() for i in range(len(texts))]
-                        return out_fa
+                        return [fa_map.get(i, "").strip() for i in range(len(texts))]
+                else:
+                    print(f"      [LLM JSON Retry {attempt + 1}/4] no JSON array in reply")
+                    time.sleep(2)
             else:
                 print(f"      [LLM Note {resp.status_code} - Retry {attempt + 1}/4] {resp.text[:100]}")
                 time.sleep(2)
@@ -276,6 +284,39 @@ def translate_dialogues_llm(texts, base_url=DEFAULT_LLM_URL, model=DEFAULT_LLM_M
             time.sleep(2)
 
     return [""] * len(texts)
+
+
+def translate_dialogues_llm(texts, base_url=DEFAULT_LLM_URL, model=DEFAULT_LLM_MODEL,
+                            key=DEFAULT_LLM_KEY, batch_size=15, max_tokens=12000):
+    """
+    Send ordered list of English texts to Gemini for contextual Persian localization.
+    Uses structured ID mapping so responses are never misaligned or dropped.
+    Intelligently recovers stylized comic fonts, outlined typography, and handwriting distortions.
+
+    Texts are sent in small batches (LLMs silently DROP ids or truncate the JSON
+    when one reply must cover a whole busy page); after the batch pass, any item
+    that came back empty gets ONE individual retry so a single bad batch never
+    wipes out a region's translation.
+    """
+    if not texts:
+        return []
+    if batch_size is None or batch_size <= 0:
+        batch_size = 15
+
+    out_fa = [""] * len(texts)
+    for start in range(0, len(texts), batch_size):
+        chunk = texts[start:start + batch_size]
+        got = _llm_translate_batch(chunk, base_url, model, key)
+        for j, t in enumerate(got):
+            out_fa[start + j] = t.strip()
+
+    missed = [i for i, t in enumerate(out_fa) if not t and texts[i].strip()]
+    for i in missed:
+        got = _llm_translate_batch([texts[i]], base_url, model, key)
+        if got and got[0].strip():
+            out_fa[i] = got[0].strip()
+
+    return out_fa
 
 
 def is_genuine_dialogue_line(text, bbox, conf):
