@@ -1,0 +1,7 @@
+Vazirmatn font — Copyright (c) 2015-2024 Saber Rastikerdar
+Licensed under the SIL Open Font License, Version 1.1.
+Full license text: https://scripts.sil.org/OFL
+Project: https://github.com/rastikerdar/vazirmatn
+
+Bundled here so the pipeline renders Persian correctly on any machine.
+The OFL permits bundling and redistribution; keep this notice with the fonts.
